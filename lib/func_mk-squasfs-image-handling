@@ -1,0 +1,139 @@
+#!/bin/bash
+
+## ########################################################################## ##
+## generate squasfs images
+##
+## ########################################################################## ##
+## gensquashfs [OPTIONS] <squashfs-file>
+## OPTIONS:
+##   --pack-dir,   -D  <directory>    root path relative to which to read files
+##   --compressor, -c <comp_name>     Select  the  compressor to use [1]
+##   --comp-extra, -X <options>       A comma separated list of extra options
+##                                    for the selected compressor. [2]
+##   --block-size, -b <size>          Block size to use for Squashfs image.
+##                                    Defaults to 131072.
+##   --keep-time,  -k                 When using --pack-dir only:
+##                                    use the timestamps from the input files
+##                                    instead of setting defaults on all paths.
+##   --defaults,   -d  <options>      comma separated list of default values
+##                                    for implicitly created directories.
+##   Possible options for the 'list of default values':
+##   option         default
+##   -------------- ---------------
+##   uid=<value>    0 if not set
+##   gid=<value>    0 if not set
+##   mode=<value>   0755 if not set
+##   mtime=<value>  0 if not set or $SOURCE_DATE_EPOCH
+##   <https://reproducible-builds.org/specs/source-date-epoch/>
+##   Specification $SOURCE_DATE_EPOCH:
+##     The value MUST be an ASCII representation of an integer with no
+##     fractional component, identical to the output format of date +%s.
+##     %s     seconds since the »Epoch« (1970-01-01 00:00 UTC)
+##
+## --------------------------
+## [1] gensquashfs --help               Available SquashFS block compressors
+## [2] gensquashfs -X help              Available options for compressors
+##     or
+##     gensquashfs --comp-extra help
+##
+## squashfs-tools-ng        New set of tools for working with SquashFS images
+##
+## ########################################################################## ##
+## mksquashfs source1 source2 ...  <squashfs-file> [OPTIONS]
+##   -b <block_size>        set data block to <block_size>.  Default 128 Kbytes.
+##                          Optionally suffix: K or M for Kbytes or Mbytes
+##   -comp <comp_name>      select <comp> compression
+##   -tailends              pack tail ends into fragments
+##                          alternative name -always-use-fragments
+##   -processors NUMBER     Use NUMBER processors.
+##                          By default will use number of processors available.
+##
+##  see Compressors available and compressor specific options (mksquashfs --help)
+##
+##  runtime options:
+##  -info                   print files written to filesystem
+##  -no-progress            do not display the progress bar
+##  -progress               display progress bar when using the -info option
+##
+## --------------------------
+## squashfs-tools           set of tools for working with SquashFS images
+##
+## ########################################################################## ##
+##  compressor: <comp_name>
+##    gzip  (mksquashfs default)
+##    lzma
+##    lzo
+##    xz    (gensquashfs default)
+##    lz4
+##    zstd
+##
+## ########################################################################## ##
+export FUNC_MK_SQUASFS_IMAGE_HANDLING="true"
+#PROGRAM="gensquashfs"
+PROGRAM="mksquashfs"
+
+## -------------------------------------------------------------------------- ##
+## FUNCTIONS:
+## -------------------------------------------------------------------------- ##
+func_mk_squashfs_image() # input output
+{
+  local input output program
+  local comp_name build_options
+  local start end period
+  input="$1"; output="$2"
+  if [ -n "$3" ]; then
+    program="$3"
+  else
+    program="${PROGRAM}"
+  fi
+  comp_name="gzip"  ##  (mksquashfs default)
+  #comp_name="lzma"  ##
+  #comp_name="lzo"   ##
+  #comp_name="xz"    ##  (gensquashfs default)
+  #comp_name="lz4"   ##
+  #comp_name="zstd"  ##
+
+  ## -----------------------
+  ## time measurement: start
+  start=$(date +%s)
+  ## -----------------------
+
+  if [ "${program}" = "gensquashfs" ]; then
+    local current_time
+    current_time=$(date +%s)
+    build_options="-c ${comp_name}"
+    build_options="${build_options} --defaults mtime=${current_time}"
+    build_options="${build_options} -k"
+    [ "${comp_name}" = "xz" ] \
+      && build_options="${build_options} --comp-extra level=6,x86"
+    build_options="${build_options} -b 1024K"
+    func_cmd "sudo ${program} ${build_options} -D ${input} ${output}"
+  elif [ "${program}" = "mksquashfs" ]; then
+    build_options="-comp ${comp_name}"
+    ## https://fedoraproject.org/wiki/Changes/OptimizeSquashFS
+    [ "${comp_name}" = "xz" ] \
+      && build_options="${build_options} -Xbcj x86 -Xdict-size 1M"
+    build_options="${build_options} -b 1024K"
+    build_options="${build_options} -always-use-fragments"
+    #build_options="${build_options} -info -progress"
+    func_cmd "sudo ${program} ${input} ${output} ${build_options}"
+  else
+    echo "!!! ERROR: no program selected !!!"
+  fi
+
+  ## -----------------------
+  ## time measurement: end
+  end=$(date +%s)
+  period=$((end - start))
+  ## -----------------------
+  func_echo "Generate squashfs image - elapsed time: ${period} seconds" "SECTION"
+}
+
+## wrapper functions:
+[ "${FUNC_SCRIPT_HANDLING}" = "true" ] || {
+  func_echo(){ echo "$1"; }
+  func_cmd(){ echo "$1"; eval "$1"; }
+}
+
+## ########################################################################## ##
+

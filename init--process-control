@@ -1,0 +1,66 @@
+#!/bin/bash
+
+## ########################################################################## ##
+## Creation of overlay files
+## note: multiple calls possible
+##
+## ########################################################################## ##
+
+## globals: process control (PC) configurations
+SINGLE_ARCHIVE="1"
+COMMON_ARCHIVE="2"
+COMMON_CONTAINER="3"
+DEB_to_TARGZ="4"
+DIR_to_TARGZ="5"
+TARGZ_to_DIR="6"
+
+## -------------------------------------------------------------------------- ##
+## FUNCTIONS:
+## -------------------------------------------------------------------------- ##
+## process control (see below):
+func_process_control(){ # process_control="$1"
+  local process_control
+  process_control="$1"
+
+  if [ "${process_control}" = "${SINGLE_ARCHIVE}" ]; then
+    LIST_DIR_NO_ARRAY=(
+#    13
+    )
+  elif [ "${process_control}" = "${COMMON_ARCHIVE}" ]; then
+    LIST_DIR_NO_ARRAY=(
+#    13
+    )
+  elif [ "${process_control}" = "${COMMON_CONTAINER}" ]; then
+    ## build LAYER:
+    LIST_DIR_NO_ARRAY=(
+#    13
+#    32
+#    64
+    )
+  ## ----------------------------------------------------- ##
+  elif [ "${process_control}" = "${TARGZ_to_DIR}" ]; then
+    LIST_DIR_NO_ARRAY=(
+    13
+#    32
+#    64
+    )
+  elif [ "${process_control}" = "${DIR_to_TARGZ}" ]; then
+    LIST_DIR_NO_ARRAY=(
+    13
+#    32
+#    64
+    )
+  elif [ "${process_control}" = "${DEB_to_TARGZ}" ]; then
+    LIST_DIR_NO_ARRAY=(
+    99
+    )
+
+  else
+    echo "No subdirectory was selected!!!";
+    echo "Press enter to continue..."; read -r;
+    exit 1
+  fi
+}
+
+## ########################################################################## ##
+

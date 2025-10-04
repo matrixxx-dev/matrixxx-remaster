@@ -1,0 +1,11 @@
+rootfs
+├── home
+│   └── xxx
+│       └── .config
+│           └── lxpanel
+│               └── LXDE
+│                   └── panels
+│                       └── panel
+└── info
+    ├── update_lxpanel_corrected-tree.txt
+    └── update_lxpanel_corrected.txt

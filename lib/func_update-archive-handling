@@ -1,0 +1,249 @@
+#!/bin/bash
+
+## ########################################################################## ##
+## functions and globals for the 'update' archive handling:
+##
+## note: matrixxx has two remastering file types
+##       1. 'update' archives (update_*.tar.gz  update_*.taz update_*.zip)
+##          which can be overlayed over '/' (root)
+##          - shortly before the system init call of the initramfs
+##       2. a squasfs image file which will be included in the union fs
+##       generation of both forms are made possible by this library
+##
+## ########################################################################## ##
+export FUNC_UPDATE_ARCHIVE_HANDLING="true"
+
+## globals:
+TEMP_DIR="rootfs"
+USER="xxx"
+PREFIX="update_"
+DIR_PREFIX="LIST_"
+CONTAINER_PREFIX="LAYER"
+TEMP_COLLECTION_DIR="XXX"
+
+## -------------------------------------------------------------------------- ##
+## FUNCTIONS:
+## -------------------------------------------------------------------------- ##
+func_init_collection_dir(){
+  func_rm_collection_dir
+  func_gen_collection_dir
+  TEMP_COLLECTION_DIR=$(realpath "${TEMP_COLLECTION_DIR}")
+}
+
+func_gen_collection_dir(){
+  mkdir "${TEMP_COLLECTION_DIR}"
+}
+
+func_rm_collection_dir(){
+  [ -d "${TEMP_COLLECTION_DIR}" ] && sudo rm -rf "${TEMP_COLLECTION_DIR}"
+}
+
+func_get_parent_dir_name(){
+  local parent_dir
+  parent_dir="$PWD"
+  parent_dir=$(basename "$parent_dir")
+  echo "$parent_dir"
+}
+
+func_extract_deb_data(){ # dir="$1"
+  local dir array file
+  dir="$1"
+  readarray -t array < <(find ./ -maxdepth 1 -name "*.deb")
+  [ "${#array[@]}" -eq 0 ] && return 1
+  for file in "${array[@]}"
+  do
+    sudo dpkg -x "${file}" "${dir}"
+  done
+}
+
+func_adapt_data(){ # dir="$1"; parent_name="$2"
+  local dir infofile infofile_tree infodir
+  dir="$1"; infofile="${PREFIX}$2.txt"
+  infofile_tree="${PREFIX}$2-tree.txt"
+  infodir="${dir}/info"
+  [ -d "${dir}" ] && func_UsrMerge "${dir}"
+  [ -d "${dir}" ] && func_change_user "${dir}"
+  [ -d "${infodir}" ] && sudo rm -rf "${infodir}"  ## TODO: revision artefact !?
+  sudo mkdir -p "${infodir}"
+  sudo sh -c "echo Content: > ${infodir}/${infofile}"
+  sudo sh -c "ls *.deb 2>/dev/null >> ${infodir}/${infofile}"
+  sudo sh -c "echo [see ${infofile_tree}] >> ${infodir}/${infofile}"
+  sudo sh -c "tree -a --noreport --dirsfirst ${dir} \
+              > ${infodir}/${infofile_tree}"
+}
+
+func_UsrMerge(){ # dir="$1"
+  local dir dir_array base_dir usr_dir
+  dir="$1"
+  dir_array=("bin" "sbin" "lib" "lib32" "lib64" "libexec" "libx32")
+  base_dir="$PWD"
+
+  ## -------------------
+  cd "${dir}" || return 1
+  for dir in "${dir_array[@]}"
+  do
+    if [ -d "./${dir}" ]; then
+      usr_dir="./usr/${dir}"
+      if [ -d "${usr_dir}" ]; then
+        ## note: -afr : keep attributes, force overwrite, recursive copy
+        sudo cp -afr ./"${dir}"/. "${usr_dir}"/
+        sudo rm -rf ./"${dir}"
+      else
+        sudo mv -f ./"${dir}" ./usr
+      fi
+    fi
+  done
+  cd "${base_dir}" || return 1
+  ## -------------------
+}
+
+func_change_user(){ # dir="$1";
+  local dir home_path user_list
+  dir="$1"
+  home_path="${dir}/home"
+  [ -d "${home_path}" ] || return 0
+  readarray -t user_list < <(ls "${home_path}")
+  [ "${#user_list[@]}" -eq 1 ] || {
+    read -rp "multiple users can't be handled!"; return 1;
+  }
+  [ "${user_list[0]}" == "${USER}" ] \
+    || sudo mv -f "${home_path}/${user_list[0]}" "${home_path}/${USER}"
+  return 0
+}
+
+func_pack_dir_to_targz(){ # dir="$1"; file="$2"
+  local dir file base_path
+  dir="$1"; file="$2"
+  base_path="$PWD"
+  [ -f "${file}" ] && rm -rf "${file}"
+  ## -------------------
+  cd "${dir}" || return 1
+  sudo tar -czf "${file}" ./
+  sudo chgrp 1000 "${file}"
+  sudo chown 1000 "${file}"
+  cd "${base_path}" || return 1
+  ## -------------------
+}
+
+func_extract_targz_to_dir(){ # dir="$1"; file="$2"
+  local dir file
+  dir="$1"; file="$2"
+  [ -f "${file}" ] && {
+    [ -d "${dir}" ] || mkdir -p "${dir}"
+    sudo tar -xzf ./"${file}" -C "${dir}"
+  }
+}
+
+## -------------------------------------------------------------------------- ##
+func_gen_single_archive(){ # archive="$1"; dir_name="$2"
+  local archive archive_copy
+  archive="$1"; dir_name="$2"
+  archive_copy="../${PREFIX}${dir_name}.tar.gz"
+  [ -f "${archive_copy}" ] && rm -f "${archive_copy}"
+  cp "${archive}" "${archive_copy}"
+}
+
+func_gen_temp_collection_dir(){ # archive_file="$1"
+  func_extract_targz_to_dir "${TEMP_COLLECTION_DIR}" "$1"
+}
+
+func_deb2targz(){ # dir="$1"; parent="$2"
+  local dir parent
+  dir="$1"; parent="$2"
+  [ -d "${dir}" ] && sudo rm -rf "${dir}"
+  func_extract_deb_data "${dir}" && {
+    func_adapt_data "${dir}" "${parent}"
+    func_pack_dir_to_targz "${dir}" "../${dir}.tar.gz"
+  }
+  [ -d "${dir}" ] && sudo rm -rf "${dir}"
+}
+
+func_dir2targz(){ # dir="$1"; parent="$2"
+  local dir parent
+  dir="$1"; parent="$2"
+  [ -d data ] && mv data "${dir}"                 ## TODO: revision artefact !!
+  [ -d "${dir}" ] || return 1
+  func_adapt_data "${dir}" "${parent}"
+  func_pack_dir_to_targz "${dir}" "../${dir}.tar.gz"
+  [ -d "${dir}" ] && sudo rm -rf "${dir}"
+}
+
+func_targz2dir(){ # dir="$1"
+  func_extract_targz_to_dir "$1" "$1.tar.gz"
+}
+
+func_gen_common_archive(){ # archive_file="$1"
+  func_pack_dir_to_targz "${TEMP_COLLECTION_DIR}" "$1"
+}
+
+func_gen_common_container(){ # marker="$1"
+  local marker array file infodir name new_name
+  marker="$1"
+  file="${CONTAINER_PREFIX}${marker}"
+  [ -f "${file}" ] && rm -f "${file}"
+  infodir="${TEMP_COLLECTION_DIR}/info"
+  readarray -t array < <(find "${infodir}" -maxdepth 1 -name "${PREFIX}*.txt")
+  for file in "${array[@]}"; do
+    name=$(basename "${file}")
+    new_name="${name//*${PREFIX}/}"
+    sudo mv "${infodir}/${name}" "${infodir}/${new_name}"
+  done
+}
+
+## ---------------------------------------- ##
+func_LIST_handling(){ #process_control="$1"
+  local process_control base_dir list_dir dir_name dir marker archive
+  process_control="$1"
+  base_dir="$PWD"
+  func_process_control "${process_control}"
+
+  for marker in "${LIST_DIR_NO_ARRAY[@]}"
+  do
+    list_dir="${DIR_PREFIX}${marker}"
+    [ -f "${list_dir}/list" ] || continue
+    echo "- ${list_dir}"
+    ## note: Not following: ./list: openBinaryFile: does not exist
+    # shellcheck disable=SC1091
+    source "${list_dir}/list"
+    for dir_name in "${DIR_LIST[@]}"
+    do
+      dir="${list_dir}/${dir_name}"
+      [ -d "${dir}" ] || continue
+      echo "  - ${dir}"
+      ## -------------------
+      cd "${dir}" || exit 1
+      archive="${TEMP_DIR}.tar.gz"
+      # shellcheck disable=SC2154 ## warning: referenced but not assigned
+      case "${process_control}" in
+        "${SINGLE_ARCHIVE}")
+          func_gen_single_archive "${archive}" "${dir_name}" ;;
+        "${COMMON_ARCHIVE}")
+          func_gen_temp_collection_dir "${archive}" ;;
+        "${COMMON_CONTAINER}")
+          func_gen_temp_collection_dir "${archive}" ;;
+        "${DEB_to_TARGZ}")
+          func_deb2targz "${TEMP_DIR}" "$(func_get_parent_dir_name)" ;;
+        "${DIR_to_TARGZ}")
+          func_dir2targz "${TEMP_DIR}" "$(func_get_parent_dir_name)" ;;
+        "${TARGZ_to_DIR}")
+          func_targz2dir "${TEMP_DIR}" ;;
+        *)
+          echo "no process control found!" ;;
+      esac
+      cd "${base_dir}" || exit 1
+      ## -------------------
+    done
+    case "${process_control}" in
+      "${COMMON_ARCHIVE}")
+        archive="${PWD}/${DIR_PREFIX}${marker}.tar.gz"
+        func_gen_common_archive "${archive}" ;;
+      "${COMMON_CONTAINER}")
+        func_gen_common_container "${marker}"
+        func_mk_squashfs_image "${TEMP_COLLECTION_DIR}" \
+                               "${CONTAINER_PREFIX}${marker}" ;;
+    esac
+    [ -d "${TEMP_COLLECTION_DIR}" ] && sudo rm -rf "${TEMP_COLLECTION_DIR}"/*
+  done
+}
+
+## ########################################################################## ##

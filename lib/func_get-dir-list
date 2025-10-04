@@ -1,0 +1,43 @@
+#!/bin/bash
+## ########################################################################## ##
+## lib for generating a file with a sorted directory list
+##
+## ########################################################################## ##
+
+## -------------------------------------------------------------------------- ##
+## FUNCTIONS:
+## -------------------------------------------------------------------------- ##
+func_build_dir_list(){ # file
+  local file
+  file="$1"
+
+  echo -n > "${file}"
+  ## include directories
+  func_include_file_type "${file}" "d"
+  ## include links
+  func_include_file_type "${file}" "l"
+}
+
+## -------------------------------------------------------------------------- ##
+## FUNCTIONS (intern)):
+## -------------------------------------------------------------------------- ##
+func_check_if_file_exist(){ # file
+  local file="$1"
+  if [ -f "${file}" ]; then
+    echo "File: ${file} exist!"
+    exit 1
+  fi
+}
+
+func_include_file_type(){ # file type
+  local file type dir_list element
+  file="$1"; type="$2"
+  readarray -t dir_list < <(find . -mindepth 1 -maxdepth 1 -type "${type}" | sort)
+  for element in "${dir_list[@]}"
+  do
+    #echo "directory: ${element}"
+    basename "${element}" >> "${file}"
+  done
+}
+
+## ########################################################################## ##
