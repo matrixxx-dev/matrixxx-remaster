@@ -63,14 +63,14 @@ toc: false
     corresponding arrays 'LIST_DIR_NO_ARRAY'
     (only the postfix - and all characters are allowed, not just numbers).
 
-Possible processes:   Associated script:
---------------------- ---------------------------
-SINGLE_ARCHIVE        01-generate_single_archives.sh
-COMMON_ARCHIVE        02-generate_common_archives.sh
-COMMON_CONTAINER      03-mk-squashfs-image.sh
-TARGZ_to_DIR          A1-script-targz2dir.sh
-DIR_to_TARGZ          A2-script-dir2targz.sh
-DEB_to_TARGZ          A3-script-deb2targz.sh
+| Possible processes:   | Associated script:             |
+| --------------------- | ---------------------------    |
+| SINGLE_ARCHIVE        | 01-generate_single_archives.sh |
+| COMMON_ARCHIVE        | 02-generate_common_archives.sh |
+| COMMON_CONTAINER      | 03-mk-squashfs-image.sh        |
+| TARGZ_to_DIR          | A1-script-targz2dir.sh         |
+| DIR_to_TARGZ          | A2-script-dir2targz.sh         |
+| DEB_to_TARGZ          | A3-script-deb2targz.sh         |
 
 - Selecting the subdirectories to be processed:
   - In the 'list' file of a 'LIST' directory, all subdirectories contained
@@ -149,14 +149,14 @@ DEB_to_TARGZ          A3-script-deb2targz.sh
     in dazu gehörigen Arrays 'LIST_DIR_NO_ARRAY' eingetragen werden
     (nur das Postfix - und es sind alle Zeichen erlaubt, nicht nur Zahlen)
 
-Mögliche Prozesse:  Zugehöriges Skript:
-------------------- ---------------------------
-SINGLE_ARCHIVE       01-generate_single_archives.sh
-COMMON_ARCHIVE       02-generate_common_archives.sh
-COMMON_CONTAINER     03-mk-squashfs-image.sh
-TARGZ_to_DIR         A1-script-targz2dir.sh
-DIR_to_TARGZ         A2-script-dir2targz.sh
-DEB_to_TARGZ         A3-script-deb2targz.sh
+| Mögliche Prozesse:  | Zugehöriges Skript:             |
+| ------------------- | ---------------------------     |
+| SINGLE_ARCHIVE      |  01-generate_single_archives.sh |
+| COMMON_ARCHIVE      |  02-generate_common_archives.sh |
+| COMMON_CONTAINER    |  03-mk-squashfs-image.sh        |
+| TARGZ_to_DIR        |  A1-script-targz2dir.sh         |
+| DIR_to_TARGZ        |  A2-script-dir2targz.sh         |
+| DEB_to_TARGZ        |  A3-script-deb2targz.sh         |
 
 - Selektierung der zu bearbeitenden Unterverzeichnissen:
   - in der 'list' Datei eines 'LIST' Verzeichnisses müssen alle zur Verarbeiung

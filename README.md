@@ -18,6 +18,10 @@ toc: false
 -->
 - see [readme: usage][]
 
+********************************************************************************
+> [!NOTE]
+> The markdown files contain a pandoc specific extension:
+> **yaml_metadata_block**. This block is displayed as a table by GitHub.
 
 <!-- *********************************************************************** -->
 [readme: about]: doc/readme-matrixxx.md
