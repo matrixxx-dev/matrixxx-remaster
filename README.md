@@ -23,6 +23,14 @@ toc: false
 > The markdown files contain a pandoc specific extension:
 > **yaml_metadata_block**. This block is displayed as a table by GitHub.
 
+********************************************************************************
+> [!WARNING]
+> **DISCLAIMER:** THIS IS EXPERIMENTAL SOFTWARE. USE AT YOUR OWN RISK. THE
+> AUTHOR CAN NOT BE HELD LIABLE UNDER ANY CIRCUMSTANCES FOR DAMAGE TO HARDWARE
+> OR SOFTWARE, LOST DATA, OR OTHER DIRECT OR INDIRECT DAMAGE RESULTING FROM THE
+> USE OF THIS SOFTWARE.
+> YOU ARE RESPONSIBLE FOR YOUR OWN COMPLIANCE WITH ALL APPLICABLE LAWS.
+
 <!-- *********************************************************************** -->
 [readme: about]: doc/readme-matrixxx.md
 [readme: process]: doc/readme-process.md
