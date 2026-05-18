@@ -13,8 +13,7 @@ toc: false
 
 #### briefly:
 - see [readme: about][]
-- see [readme: content][]
-- see [readme: usage][]
+- see [readme: HowTo][]
 
 #### license:
 - *GNU GENERAL PUBLIC LICENSE* [[text]](LICENSE)

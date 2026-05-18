@@ -47,7 +47,7 @@ toc: false
 │                                             - rootfs directory is then deleted
 ├── A3-script-deb2targz.sh                  - creates a rootfs.tar.gz file from all *.deb files
 │                                             contained in a subdirectory
-│                                             (see special 'LIST' Directory)
+│                                             (see Special 'LIST' directory)
 ├── init--process-control                   - configuration file
 └── lib
     ├── func_get-dir-list                   - functions for creating a auxiliary file *)
@@ -62,6 +62,8 @@ toc: false
     are selected for the respective processes by entering them in the
     corresponding arrays 'LIST_DIR_NO_ARRAY'
     (only the postfix - and all characters are allowed, not just numbers).
+  - the processes `DIR_to_TARGZ` and `TARGZ_to_DIR` are coupled and share their
+    array
 
 | Possible processes:   | Associated script:             |
 | --------------------- | ---------------------------    |
@@ -75,7 +77,47 @@ toc: false
 - Selecting the subdirectories to be processed:
   - In the 'list' file of a 'LIST' directory, all subdirectories contained
     therein that are to be processed must be entered into the corresponding
-    'DIR_LIST' array.
+    'DIR_LIST' array
+
+### Brief description of the work steps
+- `LIST_13` will serve as an example
+  - `13` is entered into the `LIST_DIR_NO_ARRAY` of the file
+    `init--process-control` in the process section `TARGZ_to_DIR` &
+    `DIR_to_TARGZ`
+  - the directory `lxpanel_corrected` is already entered into the array
+    `DIR_LIST` in the file `list` and itself contains a file `rootfs.tar.gz`
+- **execute:** A1-script-targz2dir.sh
+  - the file rootfs.tar.gz is extracted to the rootfs directory
+  - the attributes, user and group memberships of the directories and
+    files are preserved
+- **manually:** modyfy the directory
+  - for example, by copying the current `panel` file from the directory
+    /home/xxx/.config/lxpanel/LXDE/panels to the directory
+    ./rootfs/home/xxx/.config/lxpanel/LXDE/panels
+- **execute:** A2-script-dir2targz.sh
+  - the rootfs directory is written to the rootfs.tar.gz file
+    (The old rootfs.tar.gz will be lost in the process)
+- **manually:** Selecting the remastering file type: using a squasFS image
+  file as an example
+  - `13` must be entered into the `LIST_DIR_NO_ARRAY` of the
+    `init--process-control` file in the process section 'COMMON_CONTAINER'
+- **execute:** 03-mk-squashfs-image.sh
+  - A squashfs image is created from all `rootfs.tar.gz` files whose
+    directory is listed in the respective `list` file
+   (found in the script directory as LAYER_*)
+
+#### Special 'LIST' directory
+- All 'LIST' directory identifiers entered in the `DEB_to_TARGZ`
+  process behave as follows:
+- **Manually:** Creating one or more directories with *.deb files
+  - Note: This is only useful if you know that control.tar.xz (of the *.deb
+    file) would not make any necessary adjustments, as this method bypasses
+    that step
+- **execute:** A3-script-deb2targz.sh
+  - all *.deb files in a directory are extracted into a separate directory
+    using `dpkg -x`
+  - this directory is then packaged into a `rootfs.tar.gz` file, making it
+    available to the other processes
 
 ********************************************************************************
 > [!WARNING]
@@ -143,11 +185,13 @@ toc: false
 ```
 
 ### Selektierung für die Bearbeitung
-- Selektierung der zu bearbeitenden 'LIST' Verzeichnissen:
+- Selektierung der zu bearbeitenden `LIST` Verzeichnissen:
   - In der Konfigurations Datei **init--process-control** werden die 'LIST'
     Verzeichnisse für die jeweiligen Prozesse ausgewählt in dem diese
     in dazu gehörigen Arrays 'LIST_DIR_NO_ARRAY' eingetragen werden
     (nur das Postfix - und es sind alle Zeichen erlaubt, nicht nur Zahlen)
+  - dabei sind die Prozesse `DIR_to_TARGZ` und `TARGZ_to_DIR` gekoppelt und
+    teilen sich ein Array
 
 | Mögliche Prozesse:  | Zugehöriges Skript:             |
 | ------------------- | ---------------------------     |
@@ -162,6 +206,46 @@ toc: false
   - in der 'list' Datei eines 'LIST' Verzeichnisses müssen alle zur Verarbeiung
     gewünschten darin enthaltenen Unterverzeichinsse in das zugehörige
     Array 'DIR_LIST' eingetragen werden
+
+### Kurzbeschreibung der Arbeitsschritte
+- als Beispiel soll `LIST_13` dienen
+  - `13` ist in das `LIST_DIR_NO_ARRAY` der Datei `init--process-control` im
+    Prozessabschnitt `TARGZ_to_DIR` & `DIR_to_TARGZ` eingetragen
+  - dabei ist das Verzeichnis `lxpanel_corrected` schon in das Array `DIR_LIST`
+    in der Datei `list` eingetragen und enthält seinerseits eine
+    Datei `rootfs.tar.gz`
+- **execute:** A1-script-targz2dir.sh
+  - die Datei rootfs.tar.gz wird in das Verzeichnis rootfs entpackt
+  - die Attribute sowie user und group Zugehörigkeit der Verzeichnisse und
+    Dateien bleiben dabei erhalten
+- **manually:** Anpassung dieses Verzeichnisses
+  - z.B. durch Übernahme der aktuellen Datei `panel` im Verzeichnis
+    /home/xxx/.config/lxpanel/LXDE/panels in das Verzeichnis
+    ./rootfs/home/xxx/.config/lxpanel/LXDE/panels
+- **execute:** A2-script-dir2targz.sh
+  - das Verzeichnis rootfs wird in die Datei rootfs.tar.gz Datei geschrieben
+    (die alte rootfs.tar.gz geht dabei verloren)
+- **manually:** Auswahl des Remastering-Dateitypen: beispielhaft eine
+    squasFS Image-Datei
+  - `13` ist in das `LIST_DIR_NO_ARRAY` der Datei `init--process-control` im
+    Prozessabschnitt 'COMMON_CONTAINER' einzutragen
+- **execute:** 03-mk-squashfs-image.sh
+  - aus allen `rootfs.tar.gz`, deren Verzeichnis in der jeweiligen `list` Datei
+    eingetragen ist, wird ein squashfs Image erzeugt
+    (zu finden im Skriptverzeichnis als LAYER_*)
+
+#### Spezielles 'LIST' Verzeichnis
+- alle 'LIST' Verzeichnisse Bezeichner, welche in Prozessabschnitt `DEB_to_TARGZ`
+  eingetragen werden verhalten sich wie folgt:
+- **manually:** Anlegen von einem oder mehreren Verzeichnissen mit *.deb Dateien
+  - note: sinvoll ist dies nur, wenn man weiß, dass control.tar.xz (der
+    *.deb Datei) keine notwendigen Anpassungen durchführen würde, da dies durch
+    dieses Verfahren nicht zum Zuge kommt
+- **execute:** A3-script-deb2targz.sh
+  - alle *.deb Dateien eines Verzeichnisses werden mit `dpkg -x` in ein eigenes
+    Verzeichnis entpackt
+  - dieses Verzeichnis wird daraufhin in eine `rootfs.tar.gz` Datei gepackt und
+    kann so den anderen Prozessen zu geführt werden
 
 ********************************************************************************
 > [!WARNING]
