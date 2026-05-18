@@ -6,7 +6,7 @@
 ## note: matrixxx has two remastering file types
 ##       1. 'update' archives (update_*.tar.gz  update_*.taz update_*.zip)
 ##          which can be overlayed over '/' (root)
-##          - shortly before the system init call of the initramfs
+##          - shortly before the system init call (initramfs)
 ##       2. a squasfs image file which will be included in the union fs
 ##       generation of both forms are made possible by this library
 ##
@@ -106,7 +106,7 @@ func_change_user(){ # dir="$1";
   [ "${#user_list[@]}" -eq 1 ] || {
     read -rp "multiple users can't be handled!"; return 1;
   }
-  [ "${user_list[0]}" == "${USER}" ] \
+  [ "${user_list[0]}" = "${USER}" ] \
     || sudo mv -f "${home_path}/${user_list[0]}" "${home_path}/${USER}"
   return 0
 }

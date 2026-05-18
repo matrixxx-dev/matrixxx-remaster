@@ -68,6 +68,13 @@
 ##    zstd
 ##
 ## ########################################################################## ##
+## for mksquashfs:
+## Squashfs Compression and Container Startup times
+## https://pegasus.dfki.de/posts/squashfs-compression/
+## Changes/OptimizeSquashFS
+## https://fedoraproject.org/wiki/Changes/OptimizeSquashFS
+##
+## ########################################################################## ##
 export FUNC_MK_SQUASFS_IMAGE_HANDLING="true"
 #PROGRAM="gensquashfs"
 PROGRAM="mksquashfs"
@@ -75,23 +82,26 @@ PROGRAM="mksquashfs"
 ## -------------------------------------------------------------------------- ##
 ## FUNCTIONS:
 ## -------------------------------------------------------------------------- ##
-func_mk_squashfs_image() # input output
+func_mk_squashfs_image() # input="$1"; output="$2";
+                         # optional: program="$3"; comp_name="$4"
 {
   local input output program
   local comp_name build_options
   local start end period
   input="$1"; output="$2"
+  program="${PROGRAM}"
   if [ -n "$3" ]; then
     program="$3"
-  else
-    program="${PROGRAM}"
   fi
-  comp_name="gzip"  ##  (mksquashfs default)
+  #comp_name="gzip"  ##  (mksquashfs default)
   #comp_name="lzma"  ##
   #comp_name="lzo"   ##
   #comp_name="xz"    ##  (gensquashfs default)
   #comp_name="lz4"   ##
-  #comp_name="zstd"  ##
+  comp_name="zstd"  ##
+  if [ -n "$4" ]; then
+    comp_name="$4"
+  fi
 
   ## -----------------------
   ## time measurement: start
@@ -107,32 +117,38 @@ func_mk_squashfs_image() # input output
     [ "${comp_name}" = "xz" ] \
       && build_options="${build_options} --comp-extra level=6,x86"
     build_options="${build_options} -b 1024K"
-    func_cmd "sudo ${program} ${build_options} -D ${input} ${output}"
+    #func_cmd "sudo ${program} ${build_options} -D ${input} ${output}"
+    func_cmd_response "sudo ${program} ${build_options} -D ${input} ${output}"
   elif [ "${program}" = "mksquashfs" ]; then
     build_options="-comp ${comp_name}"
-    ## https://fedoraproject.org/wiki/Changes/OptimizeSquashFS
     [ "${comp_name}" = "xz" ] \
       && build_options="${build_options} -Xbcj x86 -Xdict-size 1M"
     build_options="${build_options} -b 1024K"
     build_options="${build_options} -always-use-fragments"
     #build_options="${build_options} -info -progress"
-    func_cmd "sudo ${program} ${input} ${output} ${build_options}"
+    #func_cmd "sudo ${program} ${input} ${output} ${build_options}"
+    func_cmd_response "sudo ${program} ${input} ${output} ${build_options}"
   else
     echo "!!! ERROR: no program selected !!!"
   fi
+
+  [ -f "${output}" ] && sudo chown --silent 1000:1000 "${output}"
 
   ## -----------------------
   ## time measurement: end
   end=$(date +%s)
   period=$((end - start))
   ## -----------------------
-  func_echo "Generate squashfs image - elapsed time: ${period} seconds" "SECTION"
+  func_echo "Generate squashfs image - elapsed time: ${period} seconds"
 }
 
 ## wrapper functions:
-[ "${FUNC_SCRIPT_HANDLING}" = "true" ] || {
+[ "${FUNC_SCRIPT_HANDLING}" = "true" ] ||
+[ "${FUNC_SCRIPT_LOGGING_HANDLING}" = "true" ] ||
+{
   func_echo(){ echo "$1"; }
   func_cmd(){ echo "$1"; eval "$1"; }
+  func_cmd_response(){ echo "$1"; eval "$1"; }
 }
 
 ## ########################################################################## ##
