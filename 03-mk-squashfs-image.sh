@@ -12,7 +12,7 @@ CALL="$1"
 ## includes:
 source ./init--process-control
 source ./lib/func_update-archive-handling
-source ./lib/func_mk-squasfs-image-handling
+source ./lib/func_mk-squashfs-image-handling
 
 ## -------------------------------------------------------------------------- ##
 ## MAIN:

@@ -8,7 +8,7 @@ toc: false
     1. 'update' archives (update_\*.tar.gz  update_\*.taz update_\*.zip)
        which can be overlayed over '/' (root)
         - shortly before the system init call of the initramfs
-    2. a squasfs image file which will be included in the union fs
+    2. a squashfs image file which will be included in the union fs
 - generation of both forms are made possible by this scripts
 
 ### File structure:
@@ -37,7 +37,7 @@ toc: false
 ├── 01-generate_single_archives.sh          - creates a separate archive file from each selected
 │                                             subdirectory
 ├── 02-generate_common_archives.sh          - creates an archive file from all selected subdirectories
-├── 03-mk-squashfs-image.sh                 - creates a squasFS image file from all selected
+├── 03-mk-squashfs-image.sh                 - creates a squashFS image file from all selected
 │                                             subdirectories
 ├── A1-script-targz2dir.sh                  - creates a rootfs directory in all selected subdirectories
 │                                             with the contents of the rootfs.tar.gz archive contained
@@ -51,7 +51,7 @@ toc: false
 ├── init--process-control                   - configuration file
 └── lib
     ├── func_get-dir-list                   - functions for creating a auxiliary file *)
-    ├── func_mk-squasfs-image-handling      - function for creating a squasFS image file
+    ├── func_mk-squashfs-image-handling     - function for creating a squashFS image file
     └── func_update-archive-handling        - functions for handling the file structure and creating
                                               'update_' archives
 ```
@@ -97,7 +97,7 @@ toc: false
 - **execute:** A2-script-dir2targz.sh
   - the rootfs directory is written to the rootfs.tar.gz file
     (The old rootfs.tar.gz will be lost in the process)
-- **manually:** Selecting the remastering file type: using a squasFS image
+- **manually:** Selecting the remastering file type: using a squashFS image
   file as an example
   - `13` must be entered into the `LIST_DIR_NO_ARRAY` of the
     `init--process-control` file in the process section 'COMMON_CONTAINER'
@@ -134,7 +134,7 @@ toc: false
   1. Update-Archive (update_\*.tar.gz update_\*.taz update_\*.zip)
      die über das Root-Verzeichnis '/' gelegt werden können
       - kurz vor dem System 'init' Aufruf des InitramFS
-  2. eine squasFS Image-Datei, die in das Union FS eingebunden wird
+  2. eine squashFS Image-Datei, die in das Union FS eingebunden wird
 - Die Generierung beider Formate wird durch diese Skripte ermöglicht
 
 ### Dateistruktur:
@@ -166,7 +166,7 @@ toc: false
 ├── 02-generate_common_archives.sh          - Erzeugt aus allen selektierten Unterverzeichnissen
 │                                             eine Archiv Datei
 ├── 03-mk-squashfs-image.sh                 - Erzeugt aus allen selektierten Unterverzeichnissen
-│                                             einer squasFS Imagedatei
+│                                             einer squashFS Imagedatei
 ├── A1-script-targz2dir.sh                  - Erzeugt in allen selektierten Unterverzeichnissen ein
 │                                             Verzeichnis rootfs mit dem Inhalt des dort enthaltenen
 │                                             rootfs.tar.gz Archiv
@@ -179,7 +179,7 @@ toc: false
 ├── init--process-control                   - Konfigurationsdatei
 └── lib
     ├── func_get-dir-list                   - Funktionen für die Erzeugung einer Hilfsdatei *)
-    ├── func_mk-squasfs-image-handling      - Funktion für die Erzeugung einer squasFS Imagedatei
+    ├── func_mk-squashfs-image-handling     - Funktion für die Erzeugung einer squashFS Imagedatei
     └── func_update-archive-handling        - Funktionen für die Handhabung der Dateistuktur und
                                               der Erzeugung von 'update_' Archiven
 ```
@@ -226,7 +226,7 @@ toc: false
   - das Verzeichnis rootfs wird in die Datei rootfs.tar.gz Datei geschrieben
     (die alte rootfs.tar.gz geht dabei verloren)
 - **manually:** Auswahl des Remastering-Dateitypen: beispielhaft eine
-    squasFS Image-Datei
+    squashFS Image-Datei
   - `13` ist in das `LIST_DIR_NO_ARRAY` der Datei `init--process-control` im
     Prozessabschnitt 'COMMON_CONTAINER' einzutragen
 - **execute:** 03-mk-squashfs-image.sh

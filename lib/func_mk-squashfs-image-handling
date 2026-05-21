@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## ########################################################################## ##
-## generate squasfs images
+## generate squashfs images
 ##
 ## ########################################################################## ##
 ## gensquashfs [OPTIONS] <squashfs-file>
@@ -75,7 +75,7 @@
 ## https://fedoraproject.org/wiki/Changes/OptimizeSquashFS
 ##
 ## ########################################################################## ##
-export FUNC_MK_SQUASFS_IMAGE_HANDLING="true"
+export FUNC_MK_SQUASHFS_IMAGE_HANDLING="true"
 #PROGRAM="gensquashfs"
 PROGRAM="mksquashfs"
 
